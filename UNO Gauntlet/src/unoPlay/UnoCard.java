@@ -1,26 +1,24 @@
 package unoPlay;
 
-import javafx.scene.paint.Color;
-
 public class UnoCard {
 	
-	private Color color;
+	private String color;
 	private String cardType;
 	private String image;
 	private int pointValue;
 	
-	public UnoCard(Color color, String cardType, String image, int pointValue) {
+	public UnoCard(String color, String cardType, String image, int pointValue) {
 		this.color = color;
 		this.cardType = cardType;
 		this.image = image;
 		this.pointValue = pointValue;
 	}
 
-	public Color getColor() {
+	public String getColor() {
 		return color;
 	}
 
-	public void setColor(Color color) {
+	public void setColor(String color) {
 		this.color = color;
 	}
 
@@ -46,6 +44,10 @@ public class UnoCard {
 
 	public void setPointValue(int pointValue) {
 		this.pointValue = pointValue;
+	}
+	
+	public String toString() {
+		return color + " " + cardType;
 	}
 	
 }
