@@ -1,6 +1,6 @@
 package unoPlay;
 
-public class UnoCard {
+public class UnoCard implements Comparable<UnoCard>{
 	
 	private String color;
 	private String cardType;
@@ -48,6 +48,17 @@ public class UnoCard {
 	
 	public String toString() {
 		return color + " " + cardType;
+	}
+
+	@Override
+	public int compareTo(UnoCard o) {
+		if(this.pointValue < o.getPointValue()) {
+			return -1;
+		}else if(this.pointValue == o.getPointValue()) {
+			return 0;
+		}else {
+			return 0;
+		}
 	}
 	
 }
