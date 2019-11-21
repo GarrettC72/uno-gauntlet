@@ -1,5 +1,6 @@
 package unoPlay;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -19,7 +20,7 @@ public class UnoPlayArea {
 	public UnoPlayArea(boolean hard) {
 		createDeck();
 		pile = new Stack<UnoCard>();
-		currentPosition = (int)(Math.random() * 4);
+		currentPosition = 0;
 		this.hard = hard;
 		for(int i = 0; i < 7; i++) {
 			for(int j = 0; j < players.length; j++) {
@@ -29,6 +30,28 @@ public class UnoPlayArea {
 		for(int i = 1; i < players.length; i++) {
 			organizePlayerHand(players[i]);
 		}
+		while(deck.peek().getColor().equals("black")) {
+			Collections.shuffle(deck);
+		}
+		pile.push(deck.pop());
+	}
+	
+	public void restart() {
+		createDeck();
+		pile = new Stack<UnoCard>();
+		currentPosition = 0;
+		for(int i = 0; i < 7; i++) {
+			for(int j = 0; j < players.length; j++) {
+				players[j].addCard(deck.pop());
+			}
+		}
+		for(int i = 1; i < players.length; i++) {
+			organizePlayerHand(players[i]);
+		}
+		while(deck.peek().getColor().equals("black")) {
+			Collections.shuffle(deck);
+		}
+		pile.push(deck.pop());
 	}
 
 	public void createDeck() {
@@ -132,8 +155,33 @@ public class UnoPlayArea {
 		return false;
 	}
 	
-	public void playTurn(UnoCard card) {
+	public void computerTurn() {
 		Player currentPlayer = players[currentPosition];
+	}
+	
+	public boolean canPlayCard(Player player) {
+		UnoCard topCard = pile.peek();
+		String topColor = topCard.getColor();
+		String topCardType = topCard.getCardType();
+		ArrayList<UnoCard> hand = player.getHand();
+		for(UnoCard card: hand) {
+			if(card.getColor().equals(topColor) || card.getCardType().contentEquals(topCardType)
+					|| card.getColor().equals("black")) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public boolean canPlayCard(UnoCard card) {
+		UnoCard topCard = pile.peek();
+		String topColor = topCard.getColor();
+		String topCardType = topCard.getCardType();
+		if(card.getColor().equals(topColor) || card.getCardType().equals(topCardType)
+				|| card.getColor().equals("black")) {
+			return true;
+		}
+		return false;
 	}
 
 	public boolean isBackwards() {
@@ -146,10 +194,6 @@ public class UnoPlayArea {
 
 	public int getCurrentPosition() {
 		return currentPosition;
-	}
-	
-	public Player getCurrentPlayer() {
-		return players[currentPosition];
 	}
 	
 	public Player getPlayer(int i) {
