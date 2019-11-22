@@ -9,6 +9,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.Image;
@@ -89,7 +91,6 @@ public class Main extends Application{
 		
 		BorderPane centerPane = new BorderPane();
 		HBox centerPiles = new HBox();
-		centerPiles.setPadding(new Insets(5, 20, 5, 20));
 		ImageView view4 = new ImageView(backImage);
 		ImageView view5 = new ImageView(new Image(table.getPile().peek().getImage(),85,130,false,false));
 		centerPiles.getChildren().addAll(view4, view5);
@@ -172,7 +173,7 @@ public class Main extends Application{
 		centerPane.setTop(colorButtons);
 		
 		HBox pane1 = new HBox();
-		pane1.getChildren().add(new Label("Player1"));
+		pane1.getChildren().add(new Label("Player 1"));
 		HBox cardDisplay = new HBox();
 		ArrayList<UnoCard> hand = table.getPlayer(0).getHand();
 		for(UnoCard card: hand) {
@@ -181,7 +182,7 @@ public class Main extends Application{
 			cardDisplay.getChildren().add(cardImage);
 			cardImage.setOnMouseClicked(e -> {
 				if(table.canPlayCard(card)) {
-					info.setText(info.getText() + "\nPlayer 1 plays " + card.toString());
+					info.appendText("\nPlayer 1 plays " + card.toString());
 					table.getPile().push(card);
 					table.getPlayer(0).getHand().remove(card);
 					view5.setImage(new Image(card.getImage(),85,130,false,false));
@@ -191,7 +192,7 @@ public class Main extends Application{
 						greenButton.setDisable(false);
 						redButton.setDisable(false);
 						yellowButton.setDisable(false);
-						info.setText(info.getText() + "Choose a color");
+						info.appendText("\nChoose a color");
 					}
 				}
 			});
@@ -199,6 +200,11 @@ public class Main extends Application{
 		pane1.setStyle("-fx-background-color: blue");
 		pane1.setAlignment(Pos.CENTER);
 		pane1.getChildren().add(cardDisplay);
+		ScrollPane s1 = new ScrollPane();
+		s1.setHbarPolicy(ScrollBarPolicy.AS_NEEDED);
+		s1.setVbarPolicy(ScrollBarPolicy.NEVER);
+		s1.setContent(pane1);
+		s1.setStyle("-fx-background: blue; -fx-background-color: blue");
 		
 		view4.setOnMouseClicked(e -> {
 			Player player = table.getPlayer(0);
@@ -213,11 +219,18 @@ public class Main extends Application{
 				cardDisplay.getChildren().add(newCardImage);
 				newCardImage.setOnMouseClicked(f -> {
 					if(table.canPlayCard(newCard)) {
-						info.setText(info.getText() + "\nPlayer 1 plays " + newCard.toString());
+						info.appendText("\nPlayer 1 plays " + newCard.toString());
 						table.getPile().push(newCard);
 						player.getHand().remove(newCard);
 						view5.setImage(newImage);
 						cardDisplay.getChildren().remove(newCardImage);
+						if(newCard.getColor().equals("black")) {
+							blueButton.setDisable(false);
+							greenButton.setDisable(false);
+							redButton.setDisable(false);
+							yellowButton.setDisable(false);
+							info.appendText("\nChoose a color");
+						}
 					}
 				});
 			}
@@ -230,23 +243,23 @@ public class Main extends Application{
 		view3.setRotate(180.0);
 		
 		VBox pane2 = new VBox();
-		pane2.getChildren().addAll(new Label("Player2"), view1);
+		pane2.getChildren().addAll(new Label("Player 2"), view1);
 		pane2.setStyle("-fx-background-color: red");
 		pane2.setAlignment(Pos.CENTER);
 		
 		HBox pane3 = new HBox();
-		pane3.getChildren().addAll(new Label("Player3"), view2);
+		pane3.getChildren().addAll(new Label("Player 3"), view2);
 		pane3.setStyle("-fx-background-color: green");
 		pane3.setAlignment(Pos.CENTER);
 		
 		VBox pane4 = new VBox();
-		pane4.getChildren().addAll(new Label("Player4"), view3);
+		pane4.getChildren().addAll(new Label("Player 4"), view3);
 		pane4.setStyle("-fx-background-color: yellow");
 		pane4.setAlignment(Pos.CENTER);
 		
 		pane.setTop(pane3);
 		pane.setRight(pane2);
-		pane.setBottom(pane1);
+		pane.setBottom(s1);
 		pane.setLeft(pane4);
 		pane.setCenter(centerPane);
 		Scene scene = new Scene(pane, 800, 700);
