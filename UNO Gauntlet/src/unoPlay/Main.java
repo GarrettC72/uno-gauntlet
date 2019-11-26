@@ -26,6 +26,16 @@ public class Main extends Application{
 	
 	private static UnoPlayArea table;
 	private TextArea info;
+	private Label play1;
+	private Label play2;
+	private Label play3;
+	private Label play4;
+	private HBox cardDisplay;
+	private ImageView showPile;
+	private Button blueButton;
+	private Button greenButton;
+	private Button redButton;
+	private Button yellowButton;
 
 	public static void main(String[] args) {
 		launch(args);
@@ -71,8 +81,9 @@ public class Main extends Application{
 		Button start = new Button("Start Game");
 		startPane.getChildren().add(start);
 		start.setOnAction(e -> {
-			if(group1.getSelectedToggle() != null && group2.getSelectedToggle() != null)
-			startGame(primaryStage,((group2.getSelectedToggle().equals(gentle)) ? false : true));
+			if(group1.getSelectedToggle() != null && group2.getSelectedToggle() != null) {
+				startGame(primaryStage,((group2.getSelectedToggle().equals(gentle)) ? false : true),((group1.getSelectedToggle().equals(three)) ? 3 : ((group1.getSelectedToggle().equals(four)) ? 4 : 5)));
+			}
 		});
 		pane.setBottom(startPane);
 		
@@ -82,7 +93,8 @@ public class Main extends Application{
 		primaryStage.show();
 	}
 	
-	public void startGame(Stage primaryStage, boolean hard) {
+	public void startGame(Stage primaryStage, boolean hard, int rounds) {
+		int roundsLeft = rounds;
 		table = new UnoPlayArea(hard);
 		BorderPane pane = new BorderPane();
 		
@@ -92,29 +104,29 @@ public class Main extends Application{
 		BorderPane centerPane = new BorderPane();
 		HBox centerPiles = new HBox();
 		ImageView view4 = new ImageView(backImage);
-		ImageView view5 = new ImageView(new Image(table.getPile().peek().getImage(),85,130,false,false));
-		centerPiles.getChildren().addAll(view4, view5);
+		ImageView showPile = new ImageView(new Image(table.getPile().peek().getImage(),85,130,false,false));
+		centerPiles.getChildren().addAll(view4, showPile);
 		centerPiles.setAlignment(Pos.CENTER);
 		info = new TextArea();
 		info.setEditable(false);
 		info.setText("Game Start");
 		HBox colorButtons = new HBox();
-		Button blueButton = new Button("Blue");
+		blueButton = new Button("Blue");
 		blueButton.setStyle("-fx-background-color: #0000ff; ");
-		Button greenButton = new Button("Green");
+		greenButton = new Button("Green");
 		greenButton.setStyle("-fx-background-color: #00ff00; ");
-		Button redButton = new Button("Red");
+		redButton = new Button("Red");
 		redButton.setStyle("-fx-background-color: #ff0000; ");
-		Button yellowButton = new Button("Yellow");
+		yellowButton = new Button("Yellow");
 		yellowButton.setStyle("-fx-background-color: #ffff00; ");
 		blueButton.setOnAction(e -> {
 			UnoCard topCard = table.getPile().peek();
 			if(topCard.getCardType().equals("wild_draw_4")) {
 				table.getPile().peek().setColor("blue");
-				view5.setImage(new Image("resources/blue_wild_draw_4_card.png",85,130,false,false));
+				showPile.setImage(new Image("resources/blue_wild_draw_4_card.png",85,130,false,false));
 			}else if(topCard.getCardType().equals("wild")) {
 				table.getPile().peek().setColor("blue");
-				view5.setImage(new Image("resources/blue_wild_card.png",85,130,false,false));
+				showPile.setImage(new Image("resources/blue_wild_card.png",85,130,false,false));
 			}
 			blueButton.setDisable(true);
 			greenButton.setDisable(true);
@@ -125,10 +137,10 @@ public class Main extends Application{
 			UnoCard topCard = table.getPile().peek();
 			if(topCard.getCardType().equals("wild_draw_4")) {
 				table.getPile().peek().setColor("green");
-				view5.setImage(new Image("resources/green_wild_draw_4_card.png",85,130,false,false));
+				showPile.setImage(new Image("resources/green_wild_draw_4_card.png",85,130,false,false));
 			}else if(topCard.getCardType().equals("wild")) {
 				table.getPile().peek().setColor("green");
-				view5.setImage(new Image("resources/green_wild_card.png",85,130,false,false));
+				showPile.setImage(new Image("resources/green_wild_card.png",85,130,false,false));
 			}
 			blueButton.setDisable(true);
 			greenButton.setDisable(true);
@@ -139,10 +151,10 @@ public class Main extends Application{
 			UnoCard topCard = table.getPile().peek();
 			if(topCard.getCardType().equals("wild_draw_4")) {
 				table.getPile().peek().setColor("red");
-				view5.setImage(new Image("resources/red_wild_draw_4_card.png",85,130,false,false));
+				showPile.setImage(new Image("resources/red_wild_draw_4_card.png",85,130,false,false));
 			}else if(topCard.getCardType().equals("wild")) {
 				table.getPile().peek().setColor("red");
-				view5.setImage(new Image("resources/red_wild_card.png",85,130,false,false));
+				showPile.setImage(new Image("resources/red_wild_card.png",85,130,false,false));
 			}
 			blueButton.setDisable(true);
 			greenButton.setDisable(true);
@@ -153,10 +165,10 @@ public class Main extends Application{
 			UnoCard topCard = table.getPile().peek();
 			if(topCard.getCardType().equals("wild_draw_4")) {
 				table.getPile().peek().setColor("yellow");
-				view5.setImage(new Image("resources/yellow_wild_draw_4_card.png",85,130,false,false));
+				showPile.setImage(new Image("resources/yellow_wild_draw_4_card.png",85,130,false,false));
 			}else if(topCard.getCardType().equals("wild")) {
 				table.getPile().peek().setColor("yellow");
-				view5.setImage(new Image("resources/yellow_wild_card.png",85,130,false,false));
+				showPile.setImage(new Image("resources/yellow_wild_card.png",85,130,false,false));
 			}
 			blueButton.setDisable(true);
 			greenButton.setDisable(true);
@@ -173,19 +185,23 @@ public class Main extends Application{
 		centerPane.setTop(colorButtons);
 		
 		HBox pane1 = new HBox();
-		pane1.getChildren().add(new Label("Player 1"));
-		HBox cardDisplay = new HBox();
+		play1 = new Label("Player 1\nCards left: " + table.getPlayer(0).getHand().size() +
+				"\nPoints: " + table.getPlayer(0).getPointTotal());
+		pane1.getChildren().add(play1);
+		cardDisplay = new HBox();
 		ArrayList<UnoCard> hand = table.getPlayer(0).getHand();
 		for(UnoCard card: hand) {
 			Image image = new Image(card.getImage(),85,130,false,false);
 			ImageView cardImage = new ImageView(image);
 			cardDisplay.getChildren().add(cardImage);
 			cardImage.setOnMouseClicked(e -> {
-				if(table.canPlayCard(card)) {
-					info.appendText("\nPlayer 1 plays " + card.toString());
+				if(table.canPlayCard(card) && table.getCurrentPosition() == 0) {
+					info.appendText("\nPlayer 1 plays " + card.toString() + "\nCurrentPosition: " + table.getCurrentPosition());
 					table.getPile().push(card);
 					table.getPlayer(0).getHand().remove(card);
-					view5.setImage(new Image(card.getImage(),85,130,false,false));
+					showPile.setImage(new Image(card.getImage(),85,130,false,false));
+					table.applyEffect(card);
+					updateText();
 					cardDisplay.getChildren().remove(cardImage);
 					if(card.getColor().equals("black")) {
 						blueButton.setDisable(false);
@@ -210,29 +226,47 @@ public class Main extends Application{
 			Player player = table.getPlayer(0);
 			if(table.getCurrentPosition() == 0 && !table.canPlayCard(player)) {
 				UnoCard newCard = table.getDeck().pop();
-				player.getHand().add(newCard);
+				Image newImage = new Image(newCard.getImage(),85,130,false,false);
 				if(table.getDeck().size() == 0) {
 					table.shuffleDeck();
 				}
-				Image newImage = new Image(newCard.getImage(),85,130,false,false);
-				ImageView newCardImage = new ImageView(newImage);
-				cardDisplay.getChildren().add(newCardImage);
-				newCardImage.setOnMouseClicked(f -> {
-					if(table.canPlayCard(newCard)) {
-						info.appendText("\nPlayer 1 plays " + newCard.toString());
-						table.getPile().push(newCard);
-						player.getHand().remove(newCard);
-						view5.setImage(newImage);
-						cardDisplay.getChildren().remove(newCardImage);
-						if(newCard.getColor().equals("black")) {
-							blueButton.setDisable(false);
-							greenButton.setDisable(false);
-							redButton.setDisable(false);
-							yellowButton.setDisable(false);
-							info.appendText("\nChoose a color");
-						}
+				if(table.canPlayCard(newCard)) {
+					info.appendText("\nPlayer 1 plays " + newCard.toString() + "\nCurrentPosition: " + table.getCurrentPosition());
+					table.getPile().push(newCard);
+					showPile.setImage(newImage);
+					table.applyEffect(newCard);
+					updateText();
+					if(newCard.getColor().equals("black")) {
+						blueButton.setDisable(false);
+						greenButton.setDisable(false);
+						redButton.setDisable(false);
+						yellowButton.setDisable(false);
+						info.appendText("\nChoose a color");
 					}
-				});
+				}else {
+					player.getHand().add(newCard);
+					ImageView newCardImage = new ImageView(newImage);
+					cardDisplay.getChildren().add(newCardImage);
+					newCardImage.setOnMouseClicked(f -> {
+						if(table.canPlayCard(newCard) && table.getCurrentPosition() == 0) {
+							info.appendText("\nPlayer 1 plays " + newCard.toString() + "\nCurrentPosition: " + table.getCurrentPosition());
+							table.getPile().push(newCard);
+							player.getHand().remove(newCard);
+							showPile.setImage(newImage);
+							table.applyEffect(newCard);
+							updateText();
+							cardDisplay.getChildren().remove(newCardImage);
+							if(newCard.getColor().equals("black")) {
+								blueButton.setDisable(false);
+								greenButton.setDisable(false);
+								redButton.setDisable(false);
+								yellowButton.setDisable(false);
+								info.appendText("\nChoose a color");
+							}
+						}
+					});
+					table.applyEffect(null);
+				}
 			}
 		});
 		
@@ -243,17 +277,23 @@ public class Main extends Application{
 		view3.setRotate(180.0);
 		
 		VBox pane2 = new VBox();
-		pane2.getChildren().addAll(new Label("Player 2"), view1);
+		play2 = new Label("Player 2\nCards left: " + table.getPlayer(1).getHand().size() + 
+				"\nPoints: " + table.getPlayer(1).getPointTotal());
+		pane2.getChildren().addAll(play2, view1);
 		pane2.setStyle("-fx-background-color: red");
 		pane2.setAlignment(Pos.CENTER);
 		
 		HBox pane3 = new HBox();
-		pane3.getChildren().addAll(new Label("Player 3"), view2);
+		play3 = new Label("Player 3\nCards left: " + table.getPlayer(2).getHand().size() + 
+				"\nPoints: " + table.getPlayer(2).getPointTotal());
+		pane3.getChildren().addAll(play3, view2);
 		pane3.setStyle("-fx-background-color: green");
 		pane3.setAlignment(Pos.CENTER);
 		
 		VBox pane4 = new VBox();
-		pane4.getChildren().addAll(new Label("Player 4"), view3);
+		play4 = new Label("Player 4\nCards left: " + table.getPlayer(3).getHand().size() + 
+				"\nPoints: " + table.getPlayer(3).getPointTotal());
+		pane4.getChildren().addAll(play4, view3);
 		pane4.setStyle("-fx-background-color: yellow");
 		pane4.setAlignment(Pos.CENTER);
 		
@@ -266,6 +306,59 @@ public class Main extends Application{
 		primaryStage.setTitle("UNO Gauntlet");
 		primaryStage.setScene(scene);
 		primaryStage.show();
+	}
+	
+	/** Updates player info **/
+	public void updateText() {
+		play1.setText("Player 1\nCards left: " + table.getPlayer(0).getHand().size() +
+				"\nPoints: " + table.getPlayer(0).getPointTotal());
+		play2.setText("Player 2\nCards left: " + table.getPlayer(1).getHand().size() + 
+				"\nPoints: " + table.getPlayer(1).getPointTotal());
+		play3.setText("Player 3\nCards left: " + table.getPlayer(2).getHand().size() + 
+				"\nPoints: " + table.getPlayer(2).getPointTotal());
+		play4.setText("Player 4\nCards left: " + table.getPlayer(3).getHand().size() + 
+				"\nPoints: " + table.getPlayer(3).getPointTotal());
+	}
+	
+	public void computerTurns() {
+		while(table.getCurrentPosition() != 0) {
+			table.computerTurn();
+			updateText();
+		}
+	}
+	
+	public void updatePlayerHand() {
+		cardDisplay.getChildren().clear();
+		ArrayList<UnoCard> hand = table.getPlayer(0).getHand();
+		for(UnoCard card: hand) {
+			Image image = new Image(card.getImage(),85,130,false,false);
+			ImageView cardImage = new ImageView(image);
+			cardDisplay.getChildren().add(cardImage);
+			cardImage.setOnMouseClicked(e -> {
+				if(table.canPlayCard(card) && table.getCurrentPosition() == 0) {
+					info.appendText("\nPlayer 1 plays " + card.toString() + "\nCurrentPosition: " + table.getCurrentPosition());
+					table.getPile().push(card);
+					table.getPlayer(0).getHand().remove(card);
+					showPile.setImage(new Image(card.getImage(),85,130,false,false));
+					table.applyEffect(card);
+					updateText();
+					cardDisplay.getChildren().remove(cardImage);
+					if(card.getColor().equals("black")) {
+						blueButton.setDisable(false);
+						greenButton.setDisable(false);
+						redButton.setDisable(false);
+						yellowButton.setDisable(false);
+						info.appendText("\nChoose a color");
+					}
+				}
+			});
+		}
+	}
+	
+	public void restartGame() {
+		table.restart();
+		updateText();
+		updatePlayerHand();
 	}
 
 }

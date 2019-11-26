@@ -157,6 +157,30 @@ public class UnoPlayArea {
 	
 	public void computerTurn() {
 		Player currentPlayer = players[currentPosition];
+		ArrayList<UnoCard> hand = currentPlayer.getHand();
+		if(!canPlayCard(currentPlayer)) {
+			UnoCard topCard = deck.peek();
+			if(canPlayCard(topCard)) {
+				pile.push(topCard);
+				applyEffect(topCard);
+			}else {
+				hand.add(topCard);
+				organizePlayerHand(currentPlayer);
+				applyEffect(null);
+			}
+			if(deck.size() == 0) {
+				shuffleDeck();
+			}
+		}else {
+			for(int i = 0; i < hand.size(); i++) {
+				if(canPlayCard(hand.get(i))) {
+					UnoCard card = hand.get(i);
+					pile.push(hand.remove(i));
+					applyEffect(card);
+					break;
+				}
+			}
+		}
 	}
 	
 	public boolean canPlayCard(Player player) {
@@ -182,6 +206,122 @@ public class UnoPlayArea {
 			return true;
 		}
 		return false;
+	}
+	
+	public void applyEffect(UnoCard card) {
+		String type = (card != null) ? card.getCardType() : "";
+		int shift = 0;
+		switch(type) {
+		case "draw_2":
+			if(backwards) {
+				Player target = getPlayer((currentPosition == 0) ? 3 : (currentPosition - 1));
+				if(deck.size() < 2) {
+					int leftover = 2 - deck.size();
+					while(deck.size() > 0) {
+						target.getHand().add(deck.pop());
+					}
+					shuffleDeck();
+					for(int i = 0; i < leftover; i++) {
+						target.getHand().add(deck.pop());
+					}
+				}else {
+					for(int i = 0; i < 2; i++) {
+						target.getHand().add(deck.pop());
+					}
+				}
+				if(!target.equals(getPlayer(0))) {
+					organizePlayerHand(target);
+				}
+				shift = -2;
+			}else {
+				Player target = getPlayer((currentPosition + 1) % 4);
+				if(deck.size() < 2) {
+					int leftover = 2 - deck.size();
+					while(deck.size() > 0) {
+						target.getHand().add(deck.pop());
+					}
+					shuffleDeck();
+					for(int i = 0; i < leftover; i++) {
+						target.getHand().add(deck.pop());
+					}
+				}else {
+					for(int i = 0; i < 2; i++) {
+						target.getHand().add(deck.pop());
+					}
+				}
+				if(!target.equals(getPlayer(0))) {
+					organizePlayerHand(target);
+				}
+				shift = 2;
+			}
+			break;
+		case "skip":
+			if(backwards) {
+				shift = -2;
+			}else {
+				shift = 2;
+			}
+			break;
+		case "reverse":
+			backwards = !backwards;
+			if(backwards) {
+				shift = -1;
+			}else {
+				shift = 1;
+			}
+			break;
+		case "wild_draw_4":
+			if(backwards) {
+				Player target = getPlayer((currentPosition == 0) ? 3 : (currentPosition - 1));
+				if(deck.size() < 4) {
+					int leftover = 4 - deck.size();
+					while(deck.size() > 0) {
+						target.getHand().add(deck.pop());
+					}
+					shuffleDeck();
+					for(int i = 0; i < leftover; i++) {
+						target.getHand().add(deck.pop());
+					}
+				}else {
+					for(int i = 0; i < 4; i++) {
+						target.getHand().add(deck.pop());
+					}
+				}
+				if(!target.equals(getPlayer(0))) {
+					organizePlayerHand(target);
+				}
+				shift = -2;
+			}else {
+				Player target = getPlayer((currentPosition + 1) % 4);
+				if(deck.size() < 4) {
+					int leftover = 4 - deck.size();
+					while(deck.size() > 0) {
+						target.getHand().add(deck.pop());
+					}
+					shuffleDeck();
+					for(int i = 0; i < leftover; i++) {
+						target.getHand().add(deck.pop());
+					}
+				}else {
+					for(int i = 0; i < 4; i++) {
+						target.getHand().add(deck.pop());
+					}
+				}
+				if(!target.equals(getPlayer(0))) {
+					organizePlayerHand(target);
+				}
+				shift = 2;
+			}
+			break;
+		default:
+			if(backwards) {
+				shift = -1;
+			}else {
+				shift = 1;
+			}
+			break;
+		}
+		changeCurrentPosition(shift);
 	}
 
 	public boolean isBackwards() {
