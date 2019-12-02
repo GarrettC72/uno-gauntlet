@@ -3,8 +3,10 @@ package unoPlay;
 import java.util.ArrayList;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -23,7 +25,7 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 public class Main extends Application{
-	
+
 	private static UnoPlayArea table;
 	private TextArea info;
 	private Label play1;
@@ -36,21 +38,32 @@ public class Main extends Application{
 	private Button greenButton;
 	private Button redButton;
 	private Button yellowButton;
+	private int currentRound;
+	private int totalRounds;
 
 	public static void main(String[] args) {
 		launch(args);
 	}
-	
+
 	public void start(Stage primaryStage) {
 		table = new UnoPlayArea(false);
 		BorderPane pane = new BorderPane();
-		
+
 		Label title = new Label("UNO Gauntlet");
-		title.setFont(new Font("Lancer",20.0));
+		title.setFont(new Font("Lancer",28.0));
 		StackPane titlePane = new StackPane();
 		titlePane.getChildren().add(title);
 		pane.setTop(titlePane);
 		
+		Label rules = new Label("End the game with the least amount of points to win!\n"
+				+ "Wild and Draw 4 Cards - 50 pts\n"
+				+ "Draw 2, Skip and Reverse Cards - 20 pts\n"
+				+ "Number Cards - (Number on the card) pts");
+		rules.setAlignment(Pos.CENTER);
+		StackPane rulePane = new StackPane();
+		rulePane.getChildren().add(rules);
+		pane.setBottom(rulePane);
+
 		VBox rounds = new VBox();
 		rounds.setPadding(new Insets(5, 5, 5, 5));
 		Label lOne = new Label("Choose the number of rounds");
@@ -64,7 +77,7 @@ public class Main extends Application{
 		three.setToggleGroup(group1);
 		four.setToggleGroup(group1);
 		five.setToggleGroup(group1);
-		
+
 		VBox difficulty = new VBox();
 		difficulty.setPadding(new Insets(5, 5, 5, 5));
 		Label lTwo = new Label("Choose the difficulty");
@@ -76,7 +89,7 @@ public class Main extends Application{
 		ToggleGroup group2 = new ToggleGroup();
 		gentle.setToggleGroup(group2);
 		mean.setToggleGroup(group2);
-		
+
 		StackPane startPane = new StackPane();
 		Button start = new Button("Start Game");
 		startPane.getChildren().add(start);
@@ -85,31 +98,32 @@ public class Main extends Application{
 				startGame(primaryStage,((group2.getSelectedToggle().equals(gentle)) ? false : true),((group1.getSelectedToggle().equals(three)) ? 3 : ((group1.getSelectedToggle().equals(four)) ? 4 : 5)));
 			}
 		});
-		pane.setBottom(startPane);
-		
-		Scene scene = new Scene(pane, 400, 300);
+		pane.setCenter(startPane);
+
+		Scene scene = new Scene(pane, 600, 500);
 		primaryStage.setTitle("UNO Gauntlet");
 		primaryStage.setScene(scene);
 		primaryStage.show();
 	}
-	
+
 	public void startGame(Stage primaryStage, boolean hard, int rounds) {
-		int roundsLeft = rounds;
+		totalRounds = rounds - 1;
+		currentRound = 0;
 		table = new UnoPlayArea(hard);
 		BorderPane pane = new BorderPane();
-		
+
 		Image backImage = new Image("resources/back_uno_card.png",85,130,false,false);
 		Image backImage2 = new Image("resources/side_back_uno_card.png",130,85,false,false);
-		
+
 		BorderPane centerPane = new BorderPane();
 		HBox centerPiles = new HBox();
 		ImageView view4 = new ImageView(backImage);
-		ImageView showPile = new ImageView(new Image(table.getPile().peek().getImage(),85,130,false,false));
+		showPile = new ImageView(new Image(table.getPile().peek().getImage(),85,130,false,false));
 		centerPiles.getChildren().addAll(view4, showPile);
 		centerPiles.setAlignment(Pos.CENTER);
 		info = new TextArea();
 		info.setEditable(false);
-		info.setText("Game Start");
+		info.setText("Game " + (currentRound + 1) + " Start");
 		HBox colorButtons = new HBox();
 		blueButton = new Button("Blue");
 		blueButton.setStyle("-fx-background-color: #0000ff; ");
@@ -132,6 +146,7 @@ public class Main extends Application{
 			greenButton.setDisable(true);
 			redButton.setDisable(true);
 			yellowButton.setDisable(true);
+			computerTurns();
 		});
 		greenButton.setOnAction(e -> {
 			UnoCard topCard = table.getPile().peek();
@@ -146,6 +161,7 @@ public class Main extends Application{
 			greenButton.setDisable(true);
 			redButton.setDisable(true);
 			yellowButton.setDisable(true);
+			computerTurns();
 		});
 		redButton.setOnAction(e -> {
 			UnoCard topCard = table.getPile().peek();
@@ -160,6 +176,7 @@ public class Main extends Application{
 			greenButton.setDisable(true);
 			redButton.setDisable(true);
 			yellowButton.setDisable(true);
+			computerTurns();
 		});
 		yellowButton.setOnAction(e -> {
 			UnoCard topCard = table.getPile().peek();
@@ -174,6 +191,7 @@ public class Main extends Application{
 			greenButton.setDisable(true);
 			redButton.setDisable(true);
 			yellowButton.setDisable(true);
+			computerTurns();
 		});
 		blueButton.setDisable(true);
 		greenButton.setDisable(true);
@@ -183,7 +201,7 @@ public class Main extends Application{
 		centerPane.setCenter(centerPiles);
 		centerPane.setBottom(info);
 		centerPane.setTop(colorButtons);
-		
+
 		HBox pane1 = new HBox();
 		play1 = new Label("Player 1\nCards left: " + table.getPlayer(0).getHand().size() +
 				"\nPoints: " + table.getPlayer(0).getPointTotal());
@@ -196,19 +214,33 @@ public class Main extends Application{
 			cardDisplay.getChildren().add(cardImage);
 			cardImage.setOnMouseClicked(e -> {
 				if(table.canPlayCard(card) && table.getCurrentPosition() == 0) {
-					info.appendText("\nPlayer 1 plays " + card.toString() + "\nCurrentPosition: " + table.getCurrentPosition());
+					info.appendText("\nPlayer 1 plays " + card.toString());
+					if(table.getPlayer(0).getHand().size() == 1) {
+						info.appendText(". UNO!");
+					}
 					table.getPile().push(card);
 					table.getPlayer(0).getHand().remove(card);
 					showPile.setImage(new Image(card.getImage(),85,130,false,false));
 					table.applyEffect(card);
 					updateText();
 					cardDisplay.getChildren().remove(cardImage);
-					if(card.getColor().equals("black")) {
-						blueButton.setDisable(false);
-						greenButton.setDisable(false);
-						redButton.setDisable(false);
-						yellowButton.setDisable(false);
-						info.appendText("\nChoose a color");
+					if(table.checkVictorious(table.getPlayer(0))) {
+						if(currentRound < totalRounds) {
+							restartGame();
+						}else {
+							end();
+						}
+						updateText();
+					}else {
+						if(card.getColor().equals("black")) {
+							blueButton.setDisable(false);
+							greenButton.setDisable(false);
+							redButton.setDisable(false);
+							yellowButton.setDisable(false);
+							info.appendText("\nChoose a color");
+						}else {
+							computerTurns();
+						}
 					}
 				}
 			});
@@ -221,7 +253,7 @@ public class Main extends Application{
 		s1.setVbarPolicy(ScrollBarPolicy.NEVER);
 		s1.setContent(pane1);
 		s1.setStyle("-fx-background: blue; -fx-background-color: blue");
-		
+
 		view4.setOnMouseClicked(e -> {
 			Player player = table.getPlayer(0);
 			if(table.getCurrentPosition() == 0 && !table.canPlayCard(player)) {
@@ -231,65 +263,95 @@ public class Main extends Application{
 					table.shuffleDeck();
 				}
 				if(table.canPlayCard(newCard)) {
-					info.appendText("\nPlayer 1 plays " + newCard.toString() + "\nCurrentPosition: " + table.getCurrentPosition());
+					info.appendText("\nPlayer 1 plays " + newCard.toString());
+					if(table.getPlayer(0).getHand().size() == 1) {
+						info.appendText(". UNO!");
+					}
 					table.getPile().push(newCard);
 					showPile.setImage(newImage);
 					table.applyEffect(newCard);
 					updateText();
-					if(newCard.getColor().equals("black")) {
-						blueButton.setDisable(false);
-						greenButton.setDisable(false);
-						redButton.setDisable(false);
-						yellowButton.setDisable(false);
-						info.appendText("\nChoose a color");
+					if(table.checkVictorious(table.getPlayer(0))) {
+						if(currentRound < totalRounds) {
+							restartGame();
+						}else {
+							end();
+						}
+						updateText();
+					}else {
+						if(newCard.getColor().equals("black")) {
+							blueButton.setDisable(false);
+							greenButton.setDisable(false);
+							redButton.setDisable(false);
+							yellowButton.setDisable(false);
+							info.appendText("\nChoose a color");
+						}else {
+							computerTurns();
+						}
 					}
 				}else {
-					player.getHand().add(newCard);
+					info.appendText("\nPlayer 1 draws a card");
+					player.addCard(newCard);
 					ImageView newCardImage = new ImageView(newImage);
 					cardDisplay.getChildren().add(newCardImage);
 					newCardImage.setOnMouseClicked(f -> {
 						if(table.canPlayCard(newCard) && table.getCurrentPosition() == 0) {
-							info.appendText("\nPlayer 1 plays " + newCard.toString() + "\nCurrentPosition: " + table.getCurrentPosition());
+							info.appendText("\nPlayer 1 plays " + newCard.toString());
+							if(table.getPlayer(0).getHand().size() == 1) {
+								info.appendText(". UNO!");
+							}
 							table.getPile().push(newCard);
 							player.getHand().remove(newCard);
 							showPile.setImage(newImage);
 							table.applyEffect(newCard);
 							updateText();
 							cardDisplay.getChildren().remove(newCardImage);
-							if(newCard.getColor().equals("black")) {
-								blueButton.setDisable(false);
-								greenButton.setDisable(false);
-								redButton.setDisable(false);
-								yellowButton.setDisable(false);
-								info.appendText("\nChoose a color");
+							if(table.checkVictorious(table.getPlayer(0))) {
+								if(currentRound < totalRounds) {
+									restartGame();
+								}else {
+									end();
+								}
+								updateText();
+							}else {
+								if(newCard.getColor().equals("black")) {
+									blueButton.setDisable(false);
+									greenButton.setDisable(false);
+									redButton.setDisable(false);
+									yellowButton.setDisable(false);
+									info.appendText("\nChoose a color");
+								}else {
+									computerTurns();
+								}
 							}
 						}
 					});
 					table.applyEffect(null);
+					computerTurns();
 				}
 			}
 		});
-		
+
 		ImageView view1 = new ImageView(backImage2);
 		ImageView view2 = new ImageView(backImage);
 		view2.setRotate(180.0);
 		ImageView view3 = new ImageView(backImage2);
 		view3.setRotate(180.0);
-		
+
 		VBox pane2 = new VBox();
 		play2 = new Label("Player 2\nCards left: " + table.getPlayer(1).getHand().size() + 
 				"\nPoints: " + table.getPlayer(1).getPointTotal());
 		pane2.getChildren().addAll(play2, view1);
 		pane2.setStyle("-fx-background-color: red");
 		pane2.setAlignment(Pos.CENTER);
-		
+
 		HBox pane3 = new HBox();
 		play3 = new Label("Player 3\nCards left: " + table.getPlayer(2).getHand().size() + 
 				"\nPoints: " + table.getPlayer(2).getPointTotal());
 		pane3.getChildren().addAll(play3, view2);
 		pane3.setStyle("-fx-background-color: green");
 		pane3.setAlignment(Pos.CENTER);
-		
+
 		VBox pane4 = new VBox();
 		play4 = new Label("Player 4\nCards left: " + table.getPlayer(3).getHand().size() + 
 				"\nPoints: " + table.getPlayer(3).getPointTotal());
@@ -297,6 +359,11 @@ public class Main extends Application{
 		pane4.setStyle("-fx-background-color: yellow");
 		pane4.setAlignment(Pos.CENTER);
 		
+		play1.setFont(new Font(14.0));
+		play2.setFont(new Font(14.0));
+		play3.setFont(new Font(14.0));
+		play4.setFont(new Font(14.0));
+
 		pane.setTop(pane3);
 		pane.setRight(pane2);
 		pane.setBottom(s1);
@@ -307,7 +374,7 @@ public class Main extends Application{
 		primaryStage.setScene(scene);
 		primaryStage.show();
 	}
-	
+
 	/** Updates player info **/
 	public void updateText() {
 		play1.setText("Player 1\nCards left: " + table.getPlayer(0).getHand().size() +
@@ -319,14 +386,55 @@ public class Main extends Application{
 		play4.setText("Player 4\nCards left: " + table.getPlayer(3).getHand().size() + 
 				"\nPoints: " + table.getPlayer(3).getPointTotal());
 	}
-	
+
 	public void computerTurns() {
-		while(table.getCurrentPosition() != 0) {
-			table.computerTurn();
-			updateText();
-		}
+		Thread thread = new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+
+				try {
+					while(table.getCurrentPosition() != 0) {
+						Thread.sleep(1000);
+						int i = table.getCurrentPosition();
+						Player computer = table.getPlayer(table.getCurrentPosition());
+						if(table.computerTurn()) {
+							info.appendText("\nPlayer " + (i + 1) + " plays " + table.getPile().peek().toString());
+							if(computer.getHand().size() == 1) {
+								info.appendText(". UNO!");
+							}
+						}else {
+							info.appendText("\nPlayer " + (i + 1) + " draws a card");
+						}
+						showPile.setImage(new Image(table.getPile().peek().getImage(),85,130,false,false));
+						Platform.runLater(new Runnable() {
+
+							@Override
+							public void run() {
+								updateText();
+								updatePlayerHand();
+								if(table.checkVictorious(computer)) {
+									if(currentRound < totalRounds) {
+										restartGame();
+									}else {
+										end();
+									}
+									updateText();
+								}
+							}
+							
+						});
+					}
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+
+		});
+		thread.start();
 	}
-	
+
 	public void updatePlayerHand() {
 		cardDisplay.getChildren().clear();
 		ArrayList<UnoCard> hand = table.getPlayer(0).getHand();
@@ -336,29 +444,78 @@ public class Main extends Application{
 			cardDisplay.getChildren().add(cardImage);
 			cardImage.setOnMouseClicked(e -> {
 				if(table.canPlayCard(card) && table.getCurrentPosition() == 0) {
-					info.appendText("\nPlayer 1 plays " + card.toString() + "\nCurrentPosition: " + table.getCurrentPosition());
+					info.appendText("\nPlayer 1 plays " + card.toString());
+					if(table.getPlayer(0).getHand().size() == 1) {
+						info.appendText(". UNO!");
+					}
 					table.getPile().push(card);
 					table.getPlayer(0).getHand().remove(card);
-					showPile.setImage(new Image(card.getImage(),85,130,false,false));
+					showPile.setImage(image);
 					table.applyEffect(card);
 					updateText();
 					cardDisplay.getChildren().remove(cardImage);
-					if(card.getColor().equals("black")) {
-						blueButton.setDisable(false);
-						greenButton.setDisable(false);
-						redButton.setDisable(false);
-						yellowButton.setDisable(false);
-						info.appendText("\nChoose a color");
+					if(table.checkVictorious(table.getPlayer(0))) {
+						if(currentRound < totalRounds) {
+							restartGame();
+						}else {
+							end();
+						}
+						updateText();
+					}else {
+						if(card.getColor().equals("black")) {
+							blueButton.setDisable(false);
+							greenButton.setDisable(false);
+							redButton.setDisable(false);
+							yellowButton.setDisable(false);
+							info.appendText("\nChoose a color");
+						}else {
+							computerTurns();
+						}
 					}
 				}
 			});
 		}
 	}
-	
+
 	public void restartGame() {
-		table.restart();
-		updateText();
-		updatePlayerHand();
+		Thread thread = new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+				try {
+					Thread.sleep(1000);
+					currentRound++;
+					table.restart();
+					Platform.runLater(new Runnable() {
+
+						@Override
+						public void run() {
+							showPile.setImage(new Image(table.getPile().peek().getImage(),85,130,false,false));
+							info.appendText("\nGame " + (currentRound + 1) + " Start");
+							updateText();
+							updatePlayerHand();
+							blueButton.setDisable(true);
+							greenButton.setDisable(true);
+							redButton.setDisable(true);
+							yellowButton.setDisable(true);
+						}
+						
+					});
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			
+		});
+		thread.start();
+	}
+	
+	public void end() {
+		for(Node view: cardDisplay.getChildren()) {
+			view.setOnMouseClicked(null);
+		}
+		info.appendText("\n" + table.getWinningPlayers());
 	}
 
 }

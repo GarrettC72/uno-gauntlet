@@ -21,6 +21,7 @@ public class UnoPlayArea {
 		createDeck();
 		pile = new Stack<UnoCard>();
 		currentPosition = 0;
+		backwards = false;
 		this.hard = hard;
 		for(int i = 0; i < 7; i++) {
 			for(int j = 0; j < players.length; j++) {
@@ -30,16 +31,21 @@ public class UnoPlayArea {
 		for(int i = 1; i < players.length; i++) {
 			organizePlayerHand(players[i]);
 		}
-		while(deck.peek().getColor().equals("black")) {
+		while(deck.peek().getColor().equals("black") || deck.peek().getCardType().equals("draw_2") 
+				|| deck.peek().getCardType().equals("skip") || deck.peek().getCardType().equals("reverse")) {
 			Collections.shuffle(deck);
 		}
 		pile.push(deck.pop());
 	}
 	
 	public void restart() {
+		for(int i = 0; i < players.length; i++) {
+			players[i].getHand().clear();
+		}
 		createDeck();
 		pile = new Stack<UnoCard>();
 		currentPosition = 0;
+		backwards = false;
 		for(int i = 0; i < 7; i++) {
 			for(int j = 0; j < players.length; j++) {
 				players[j].addCard(deck.pop());
@@ -48,7 +54,8 @@ public class UnoPlayArea {
 		for(int i = 1; i < players.length; i++) {
 			organizePlayerHand(players[i]);
 		}
-		while(deck.peek().getColor().equals("black")) {
+		while(deck.peek().getColor().equals("black") || deck.peek().getCardType().equals("draw_2") 
+				|| deck.peek().getCardType().equals("skip") || deck.peek().getCardType().equals("reverse")) {
 			Collections.shuffle(deck);
 		}
 		pile.push(deck.pop());
@@ -139,10 +146,10 @@ public class UnoPlayArea {
 		}
 	}
 	
-	public boolean testVictorious(Player player) {
+	public boolean checkVictorious(Player player) {
 		if(player.getHand().size() == 0) {
 			for(int i = 0; i < players.length; i++) {
-				if(i != currentPosition) {
+				if(!players[i].equals(player)) {
 					Player loser = players[i];
 					int points = loser.getHand().stream()
 							.mapToInt(UnoCard::getPointValue)
@@ -155,21 +162,32 @@ public class UnoPlayArea {
 		return false;
 	}
 	
-	public void computerTurn() {
+	public boolean computerTurn() {
 		Player currentPlayer = players[currentPosition];
 		ArrayList<UnoCard> hand = currentPlayer.getHand();
 		if(!canPlayCard(currentPlayer)) {
-			UnoCard topCard = deck.peek();
+			UnoCard topCard = deck.pop();
 			if(canPlayCard(topCard)) {
 				pile.push(topCard);
 				applyEffect(topCard);
+				if(topCard.getColor().equals("black")) {
+					String[] colors = {"blue", "green", "red", "yellow"};
+					int c = (int)(Math.random() * 4);
+					pile.peek().setColor(colors[c]);
+					pile.peek().setImage("resources/" + colors[c] + "_" + pile.peek().getCardType() + "_card.png");
+				}
+				if(deck.size() == 0) {
+					shuffleDeck();
+				}
+				return true;
 			}else {
-				hand.add(topCard);
+				currentPlayer.addCard(topCard);
 				organizePlayerHand(currentPlayer);
 				applyEffect(null);
-			}
-			if(deck.size() == 0) {
-				shuffleDeck();
+				if(deck.size() == 0) {
+					shuffleDeck();
+				}
+				return false;
 			}
 		}else {
 			for(int i = 0; i < hand.size(); i++) {
@@ -177,10 +195,17 @@ public class UnoPlayArea {
 					UnoCard card = hand.get(i);
 					pile.push(hand.remove(i));
 					applyEffect(card);
-					break;
+					if(card.getColor().equals("black")) {
+						String[] colors = {"blue", "green", "red", "yellow"};
+						int c = (int)(Math.random() * 4);
+						pile.peek().setColor(colors[c]);
+						pile.peek().setImage("resources/" + colors[c] + "_" + pile.peek().getCardType() + "_card.png");
+					}
+					return true;
 				}
 			}
 		}
+		return false;
 	}
 	
 	public boolean canPlayCard(Player player) {
@@ -218,15 +243,15 @@ public class UnoPlayArea {
 				if(deck.size() < 2) {
 					int leftover = 2 - deck.size();
 					while(deck.size() > 0) {
-						target.getHand().add(deck.pop());
+						target.addCard(deck.pop());
 					}
 					shuffleDeck();
 					for(int i = 0; i < leftover; i++) {
-						target.getHand().add(deck.pop());
+						target.addCard(deck.pop());
 					}
 				}else {
 					for(int i = 0; i < 2; i++) {
-						target.getHand().add(deck.pop());
+						target.addCard(deck.pop());
 					}
 				}
 				if(!target.equals(getPlayer(0))) {
@@ -234,19 +259,19 @@ public class UnoPlayArea {
 				}
 				shift = -2;
 			}else {
-				Player target = getPlayer((currentPosition + 1) % 4);
+				Player target = getPlayer((currentPosition + 1) % players.length);
 				if(deck.size() < 2) {
 					int leftover = 2 - deck.size();
 					while(deck.size() > 0) {
-						target.getHand().add(deck.pop());
+						target.addCard(deck.pop());
 					}
 					shuffleDeck();
 					for(int i = 0; i < leftover; i++) {
-						target.getHand().add(deck.pop());
+						target.addCard(deck.pop());
 					}
 				}else {
 					for(int i = 0; i < 2; i++) {
-						target.getHand().add(deck.pop());
+						target.addCard(deck.pop());
 					}
 				}
 				if(!target.equals(getPlayer(0))) {
@@ -276,15 +301,15 @@ public class UnoPlayArea {
 				if(deck.size() < 4) {
 					int leftover = 4 - deck.size();
 					while(deck.size() > 0) {
-						target.getHand().add(deck.pop());
+						target.addCard(deck.pop());
 					}
 					shuffleDeck();
 					for(int i = 0; i < leftover; i++) {
-						target.getHand().add(deck.pop());
+						target.addCard(deck.pop());
 					}
 				}else {
 					for(int i = 0; i < 4; i++) {
-						target.getHand().add(deck.pop());
+						target.addCard(deck.pop());
 					}
 				}
 				if(!target.equals(getPlayer(0))) {
@@ -296,15 +321,15 @@ public class UnoPlayArea {
 				if(deck.size() < 4) {
 					int leftover = 4 - deck.size();
 					while(deck.size() > 0) {
-						target.getHand().add(deck.pop());
+						target.addCard(deck.pop());
 					}
 					shuffleDeck();
 					for(int i = 0; i < leftover; i++) {
-						target.getHand().add(deck.pop());
+						target.addCard(deck.pop());
 					}
 				}else {
 					for(int i = 0; i < 4; i++) {
-						target.getHand().add(deck.pop());
+						target.addCard(deck.pop());
 					}
 				}
 				if(!target.equals(getPlayer(0))) {
@@ -322,6 +347,26 @@ public class UnoPlayArea {
 			break;
 		}
 		changeCurrentPosition(shift);
+	}
+	
+	public String getWinningPlayers() {
+		int win = players[0].getPointTotal();
+		for(int i = 1; i < players.length; i++) {
+			if(players[i].getPointTotal() < win) {
+				win = players[i].getPointTotal();
+			}
+		}
+		ArrayList<Integer> winners = new ArrayList<Integer>();
+		for(int i = 0; i < players.length; i++) {
+			if(players[i].getPointTotal() == win) {
+				winners.add((i + 1));
+			}
+		}
+		String s = "The winners are Player(s) ";
+		for(int i: winners) {
+			s += i + ", ";
+		}
+		return s.substring(0, s.length() - 2);
 	}
 
 	public boolean isBackwards() {
