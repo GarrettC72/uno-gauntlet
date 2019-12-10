@@ -362,7 +362,7 @@ public class UnoPlayArea {
 				winners.add((i + 1));
 			}
 		}
-		String s = "The winners are Player(s) ";
+		String s = "The winner(s) are Player(s) ";
 		for(int i: winners) {
 			s += i + ", ";
 		}
@@ -379,6 +379,10 @@ public class UnoPlayArea {
 
 	public int getCurrentPosition() {
 		return currentPosition;
+	}
+	
+	public void setCurrentPosition(int currentPosition) {
+		this.currentPosition = currentPosition;
 	}
 	
 	public Player getPlayer(int i) {
