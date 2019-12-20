@@ -384,7 +384,7 @@ public class Main extends Application{
 	}
 
 	/** Updates player info **/
-	public void updateText() {
+	public synchronized void updateText() {
 		play1.setText("Player 1\nCards left: " + table.getPlayer(0).getHand().size() +
 				"\nPoints: " + table.getPlayer(0).getPointTotal());
 		play2.setText("Player 2\nCards left: " + table.getPlayer(1).getHand().size() + 
