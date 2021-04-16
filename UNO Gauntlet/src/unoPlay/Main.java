@@ -211,45 +211,6 @@ public class Main extends Application{
 		pane1.getChildren().add(play1);
 		cardDisplay = new HBox();
 		updatePlayerHand();
-//		ArrayList<UnoCard> hand = table.getPlayer(0).getHand();
-//		for(UnoCard card: hand) {
-//			Image image = new Image(card.getImage(),85,130,false,false);
-//			ImageView cardImage = new ImageView(image);
-//			cardDisplay.getChildren().add(cardImage);
-//			cardImage.setOnMouseClicked(e -> {
-//				if(table.canPlayCard(card) && table.getCurrentPosition() == 0) {
-//					info.appendText("\nPlayer 1 plays " + card.toString());
-//					table.getPile().push(card);
-//					table.getPlayer(0).getHand().remove(card);
-//					if(table.getPlayer(0).getHand().size() == 1) {
-//						info.appendText(". UNO!");
-//					}
-//					showPile.setImage(new Image(card.getImage(),85,130,false,false));
-//					table.applyEffect(card);
-//					updateText();
-//					cardDisplay.getChildren().remove(cardImage);
-//					if(table.checkVictorious(table.getPlayer(0))) {
-//						if(currentRound < totalRounds) {
-//							restartGame();
-//							return;
-//						}else {
-//							end();
-//						}
-//						updateText();
-//					}else {
-//						if(card.getColor().equals("black")) {
-//							blueButton.setDisable(false);
-//							greenButton.setDisable(false);
-//							redButton.setDisable(false);
-//							yellowButton.setDisable(false);
-//							info.appendText("\nChoose a color");
-//						}else {
-//							computerTurns();
-//						}
-//					}
-//				}
-//			});
-//		}
 		pane1.setStyle("-fx-background-color: blue");
 		pane1.setAlignment(Pos.CENTER);
 		pane1.getChildren().add(cardDisplay);
@@ -300,39 +261,6 @@ public class Main extends Application{
 					ImageView newCardImage = new ImageView(newImage);
 					cardDisplay.getChildren().add(newCardImage);
 					newCardImage.setOnMouseClicked(f -> addEventToCard(newCard, newImage, newCardImage)
-//					{
-//						if(table.canPlayCard(newCard) && table.getCurrentPosition() == 0) {
-//							info.appendText("\nPlayer 1 plays " + newCard.toString());
-//							table.getPile().push(newCard);
-//							player.getHand().remove(newCard);
-//							if(table.getPlayer(0).getHand().size() == 1) {
-//								info.appendText(". UNO!");
-//							}
-//							showPile.setImage(newImage);
-//							table.applyEffect(newCard);
-//							updateText();
-//							cardDisplay.getChildren().remove(newCardImage);
-//							if(table.checkVictorious(table.getPlayer(0))) {
-//								if(currentRound < totalRounds) {
-//									restartGame();
-//									return;
-//								}else {
-//									end();
-//								}
-//								updateText();
-//							}else {
-//								if(newCard.getColor().equals("black")) {
-//									blueButton.setDisable(false);
-//									greenButton.setDisable(false);
-//									redButton.setDisable(false);
-//									yellowButton.setDisable(false);
-//									info.appendText("\nChoose a color");
-//								}else {
-//									computerTurns();
-//								}
-//							}
-//						}
-//					}
 					);
 					table.applyEffect(null);
 					computerTurns();
@@ -421,16 +349,6 @@ public class Main extends Application{
 							@Override
 							public void run() {
 								updateGUI();
-//								if(table.checkVictorious(computer)) {
-//									stop = true;
-//									if(currentRound < totalRounds) {
-//										restartGame();
-//										return;
-//									}else {
-//										end();
-//									}
-//									updateText();
-//								}
 							}
 
 						});
@@ -464,39 +382,6 @@ public class Main extends Application{
 			ImageView cardImage = new ImageView(image);
 			cardDisplay.getChildren().add(cardImage);
 			cardImage.setOnMouseClicked(e -> addEventToCard(card, image, cardImage)
-//			{
-//				if(table.canPlayCard(card) && table.getCurrentPosition() == 0) {
-//					info.appendText("\nPlayer 1 plays " + card.toString());
-//					table.getPile().push(card);
-//					table.getPlayer(0).getHand().remove(card);
-//					if(table.getPlayer(0).getHand().size() == 1) {
-//						info.appendText(". UNO!");
-//					}
-//					showPile.setImage(image);
-//					table.applyEffect(card);
-//					updateText();
-//					cardDisplay.getChildren().remove(cardImage);
-//					if(table.checkVictorious(table.getPlayer(0))) {
-//						if(currentRound < totalRounds) {
-//							restartGame();
-//							return;
-//						}else {
-//							end();
-//						}
-//						updateText();
-//					}else {
-//						if(card.getColor().equals("black")) {
-//							blueButton.setDisable(false);
-//							greenButton.setDisable(false);
-//							redButton.setDisable(false);
-//							yellowButton.setDisable(false);
-//							info.appendText("\nChoose a color");
-//						}else {
-//							computerTurns();
-//						}
-//					}
-//				}
-//			}
 					);
 		}
 	}
@@ -575,11 +460,19 @@ public class Main extends Application{
 
 	public void end() {
 		table.setCurrentPosition(0);
-		for(Node view: cardDisplay.getChildren()) {
-			view.setOnMouseClicked(null);
-		}
-		info.appendText("\n" + table.getWinningPlayers());
-		updateGUI();
+		Platform.runLater(new Runnable() {
+
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				for(Node view: cardDisplay.getChildren()) {
+					view.setOnMouseClicked(null);
+				}
+				info.appendText("\n" + table.getWinningPlayers());
+				updateGUI();
+			}
+			
+		});
 	}
 
 }
